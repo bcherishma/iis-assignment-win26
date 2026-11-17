@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<!--
+  gripper.xacro  -  2-finger parallel gripper.
+  Parameters : gripper_span (max opening between the finger pads), finger_length,
+               finger_thickness, finger_height, palm_length, palm_height
+  Interface  : attaches to `parent`, exports the frame `tool_center_point` (TCP, between the finger pads).
+  Joint      : finger_left_joint is the actuated joint (0 = closed, gripper_span/2 = fully open);
+               finger_right_joint mimics it, so the fingers always move symmetrically.
+  Opening between the pads = 2 * q_finger.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="finger_module"
+               params="name side parent span palm_length finger_length finger_thickness finger_height mimic_joint:=''">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${finger_length/2} ${side*finger_thickness/2} 0" rpy="0 0 0"/>
+        <geometry><box size="${finger_length} ${finger_thickness} ${finger_height}"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="${finger_length/2} ${side*finger_thickness/2} 0" rpy="0 0 0"/>
+        <geometry><box size="${finger_length} ${finger_thickness} ${finger_height}"/></geometry>
+      </collision>
+      <xacro:add_box_inertia mass="0.1" x="${finger_length}" y="${finger_thickness}" z="${finger_height}"
+                          cx="${finger_length/2}" cy="${side*finger_thickness/2}"/>
+    </link>
+
+    <joint name="${name}_joint" type="prismatic">
+      <parent link="${parent}"/>
+      <child link="${name}"/>
+      <origin xyz="${palm_length} 0 0" rpy="0 0 0"/>
+      <axis xyz="0 ${side} 0"/>
+      <limit lower="0.0" upper="${span/2}" effort="40" velocity="0.2"/>
+      <xacro:if value="${mimic_joint != ''}">
+        <mimic joint="${mimic_joint}" multiplier="1.0" offset="0.0"/>
+      </xacro:if>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="parallel_gripper"
+               params="parent gripper_span finger_length:=0.09 finger_thickness:=0.02
+                       finger_height:=0.06 palm_length:=0.08 palm_height:=0.07">
+
+    <!-- the palm is automatically wide enough for the chosen span -->
+    <xacro:property name="palm_width" value="${gripper_span + 2*finger_thickness + 0.02}"/>
+
+    <link name="gripper_base">
+      <visual>
+        <origin xyz="${palm_length/2} 0 0" rpy="0 0 0"/>
+        <geometry><box size="${palm_length} ${palm_width} ${palm_height}"/></geometry>
+        <material name="light_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="${palm_length/2} 0 0" rpy="0 0 0"/>
+        <geometry><box size="${palm_length} ${palm_width} ${palm_height}"/></geometry>
+      </collision>
+      <xacro:add_box_inertia mass="0.4" x="${palm_length}" y="${palm_width}" z="${palm_height}" cx="${palm_length/2}"/>
+    </link>
+
+    <joint name="gripper_mount_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="gripper_base"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <xacro:finger_module name="finger_left"  side="1"  parent="gripper_base" span="${gripper_span}"
+                          palm_length="${palm_length}" finger_length="${finger_length}"
+                          finger_thickness="${finger_thickness}" finger_height="${finger_height}"/>
+    <xacro:finger_module name="finger_right" side="-1" parent="gripper_base" span="${gripper_span}"
+                          palm_length="${palm_length}" finger_length="${finger_length}"
+                          finger_thickness="${finger_thickness}" finger_height="${finger_height}"
+                          mimic_joint="finger_left_joint"/>
+
+    <!-- tool centre point: middle of the finger pads. The arm planner/IK targets THIS frame -->
+    <link name="tool_center_point">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><sphere radius="0.012"/></geometry>
+        <material name="red"/>
+      </visual>
+    </link>
+    <joint name="tcp_joint" type="fixed">
+      <parent link="gripper_base"/>
+      <child link="tool_center_point"/>
+      <origin xyz="${palm_length + finger_length/2} 0 0" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+</robot>

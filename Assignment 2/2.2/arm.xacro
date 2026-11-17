@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!--
+  arm.xacro  -  3-DOF planar manipulator (shoulder, elbow, wrist; all revolute about the y axis).
+  Parameters : link1_length, link2_length, wrist_length, link_radius (+ optional joint limits)
+  Interface  : attaches to `parent`, exports the flange frame `tool_mount`.
+  Convention : all joints rotate about +y, so a POSITIVE angle pitches the arm DOWN (nodding).
+               At q = (0,0,0) the arm is stretched straight forward along +x.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- A cylindrical link that starts at its own joint frame and extends along +x -->
+  <xacro:macro name="build_arm_segment" params="name length radius mass material:=blue">
+    <link name="${name}">
+      <visual>
+        <origin xyz="${length/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <geometry><cylinder radius="${radius}" length="${length}"/></geometry>
+        <material name="${material}"/>
+      </visual>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><sphere radius="${radius*1.35}"/></geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="${length/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <geometry><cylinder radius="${radius}" length="${length}"/></geometry>
+      </collision>
+      <xacro:add_cylinder_inertia mass="${mass}" radius="${radius}" length="${length}"
+                               axis="x" cx="${length/2}"/>
+    </link>
+  </xacro:macro>
+
+  <xacro:macro name="arm"
+               params="parent link1_length link2_length wrist_length link_radius:=0.04
+                       shoulder_lower:=-1.9 shoulder_upper:=1.2
+                       elbow_lower:=0.0     elbow_upper:=2.5
+                       wrist_lower:=-1.8    wrist_upper:=1.8">
+
+    <!-- links: lengths come ONLY from the parameters -->
+    <xacro:build_arm_segment name="link1"      length="${link1_length}" radius="${link_radius}"      mass="2.0" material="blue"/>
+    <xacro:build_arm_segment name="link2"      length="${link2_length}" radius="${link_radius*0.85}" mass="1.5" material="orange"/>
+    <xacro:build_arm_segment name="wrist_link" length="${wrist_length}" radius="${link_radius*0.70}" mass="0.5" material="dark_grey"/>
+
+    <!-- joint 1: shoulder pitch (sits exactly on the mounting frame) -->
+    <joint name="shoulder_joint" type="revolute">
+      <parent link="${parent}"/>
+      <child link="link1"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="${shoulder_lower}" upper="${shoulder_upper}" effort="80" velocity="1.5"/>
+    </joint>
+
+    <!-- joint 2: elbow pitch, located at the far end of link1 -->
+    <joint name="elbow_joint" type="revolute">
+      <parent link="link1"/>
+      <child link="link2"/>
+      <origin xyz="${link1_length} 0 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="${elbow_lower}" upper="${elbow_upper}" effort="60" velocity="1.5"/>
+    </joint>
+
+    <!-- joint 3: wrist pitch, located at the far end of link2 (this is the "pouring" joint) -->
+    <joint name="wrist_joint" type="revolute">
+      <parent link="link2"/>
+      <child link="wrist_link"/>
+      <origin xyz="${link2_length} 0 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="${wrist_lower}" upper="${wrist_upper}" effort="30" velocity="2.0"/>
+    </joint>
+
+    <!-- flange frame where the end-effector is bolted on -->
+    <link name="tool_mount"/>
+    <joint name="tool_mount_joint" type="fixed">
+      <parent link="wrist_link"/>
+      <child link="tool_mount"/>
+      <origin xyz="${wrist_length} 0 0" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+</robot>

@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<robot name="empty_scene">
+
+    <link name="box_1">
+        <visual>
+            <geometry>
+                <box size="0.5 0.5 0.5"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </visual>
+    </link>
+
+    <link name="cylinder_1">
+        <visual>
+            <material name="yellow">
+                <color rgba="0.6 0.396 0.082 1"/>
+            </material>
+            <geometry>
+                <cylinder length="1.5" radius="0.1"/>
+            </geometry>
+            <origin xyz="1 0 0" rpy="0 0 0"/>
+        </visual>
+    </link>
+
+    <link name="sphere_1">
+        <visual>
+            <material name="blue">
+                <color rgba="0 0 1 1"/>
+            </material>
+            <geometry>
+                <sphere radius="0.3"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </visual>
+        <collision>
+            <geometry>
+                <sphere radius="0.3"/>
+            </geometry>
+        </collision>
+         <inertial>
+            <mass value="1"/>
+            <inertia ixx="0.01" ixy="0" ixz="0"
+                     iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
+    </link>
+    <joint name="joint_pri" type="prismatic">
+        <parent link="cylinder_1"/>
+        <child link="sphere_1"/>
+        <limit lower="-0.5" upper="0.5" effort="10" velocity="1"/>
+        <axis xyz="0 0 1"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+    </joint>
+    <!-- 5. CUP MESH -->
+    <link name="cup">
+        <visual>
+            <origin xyz="1 -1 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="/cup.obj" scale="5 5 5"/>
+            </geometry>
+        </visual>
+    </link>
+    <!-- 6. SPOON MESH -->
+    <link name="spoon">
+        <visual>
+            <origin xyz="1 0 0" rpy="0.1 0.1 0.1"/>
+            <geometry>
+                <mesh filename="package://iai_kitchen/meshes/racks/BoxyToolholder/Spoon.stl"
+                      scale="0.1 0.1 0.1"/>
+            </geometry>
+        </visual>
+    </link>
+    <!-- 7. MILK CARTON MESH -->
+    <link name="milk_box">
+        <visual>
+            <origin xyz="1 1 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="/milk_box/milk_box.dae"
+                      scale="5 5 5"/>
+            </geometry>
+        </visual>
+    </link>
+
+</robot>
