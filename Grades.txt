@@ -1,3 +1,4 @@
-Assignment 1: 0.25/3.5
+Assignment 1: 0.9/3.5
 
-Too late submission!
+- Incomplete submission within deadline. Here is your last commit within the deadline: https://github.com/bcherishma/iis-assignment-win26/blob/14c24317b3705cf4ddc7058549c62c0efae92079/L01_Foundations_Tutorial.ipynb!
+- Part 1.4. Questions T1-T5 should you use proper question tags e.g., explain-why?, predict-what-if?, design-how-to?, bound-what is covered?, check- Which evidence attests the results?
